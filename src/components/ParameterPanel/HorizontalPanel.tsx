@@ -4,7 +4,6 @@ import { SettingOutlined, LineChartOutlined } from '@ant-design/icons';
 import type { SPCParameters } from '../../types';
 
 const { Option } = Select;
-const { Panel } = Collapse;
 
 interface HorizontalParameterPanelProps {
   parameters: SPCParameters;

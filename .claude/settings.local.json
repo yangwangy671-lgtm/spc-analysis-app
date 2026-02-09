@@ -5,7 +5,8 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(del \"src\\\\nul\")"
+      "Bash(del \"src\\\\nul\")",
+      "Bash(npm run build:*)"
     ]
   }
 }

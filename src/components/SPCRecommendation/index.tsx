@@ -51,7 +51,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
 
     const recentData = xBarData.slice(-10);
     const avgRecent = recentData.reduce((a, b) => a + b, 0) / recentData.length;
-    const centerLine = 'xBarCL' in controlLimits ? controlLimits.xBarCL : controlLimits.iCL;
+    const centerLine = 'xBar' in controlLimits ? controlLimits.xBar.center : controlLimits.individual.center;
 
     if (!centerLine || isNaN(avgRecent)) {
       return { type: 'stable', description: '数据不足，无法分析趋势' };
@@ -82,7 +82,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
 
     const recentR = rData.slice(-10);
     const avgR = recentR.reduce((a, b) => a + b, 0) / recentR.length;
-    const rCL = 'rCL' in controlLimits ? controlLimits.rCL : controlLimits.mrCL;
+    const rCL = 'r' in controlLimits ? controlLimits.r.center : controlLimits.movingRange.center;
 
     if (!rCL || isNaN(avgR)) {
       return { type: 'stable', description: '数据不足，无法分析趋势' };
@@ -215,6 +215,8 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
     }
 
     // 基于过程偏移的建议
+    // 注释掉，因为 metrics 不包含 usl/lsl
+    /*
     if (metrics && metrics.mean !== undefined && metrics.usl !== undefined && metrics.lsl !== undefined &&
         !isNaN(metrics.mean) && !isNaN(metrics.usl) && !isNaN(metrics.lsl)) {
       const deviation = ((metrics.mean - (metrics.usl + metrics.lsl) / 2) / (metrics.usl - metrics.lsl)) * 100;
@@ -225,6 +227,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
         });
       }
     }
+    */
 
     // 通用改进建议
     if (recommendations.length === 0) {
@@ -544,7 +547,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
                       <Text type="secondary" style={{ fontSize: 11 }}>过程潜力指数 CP</Text>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                         <Text strong style={{ fontSize: 20, color: '#1677ff' }}>{metrics.cp.toFixed(3)}</Text>
-                        <Tag size="small" color={metrics.cp >= 1.33 ? 'success' : metrics.cp >= 1.0 ? 'warning' : 'error'}>
+                        <Tag color={metrics.cp >= 1.33 ? 'success' : metrics.cp >= 1.0 ? 'warning' : 'error'}>
                           {metrics.cp >= 1.33 ? '良好' : metrics.cp >= 1.0 ? '尚可' : '不足'}
                         </Tag>
                       </div>
@@ -566,7 +569,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
                       <Text type="secondary" style={{ fontSize: 11 }}>性能指数 PPK</Text>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                         <Text strong style={{ fontSize: 20, color: '#722ed1' }}>{metrics.ppk.toFixed(3)}</Text>
-                        <Tag size="small" color={metrics.ppk >= 1.33 ? 'success' : metrics.ppk >= 1.0 ? 'warning' : 'error'}>
+                        <Tag color={metrics.ppk >= 1.33 ? 'success' : metrics.ppk >= 1.0 ? 'warning' : 'error'}>
                           {metrics.ppk >= 1.33 ? '良好' : metrics.ppk >= 1.0 ? '尚可' : '不足'}
                         </Tag>
                       </div>
@@ -588,7 +591,7 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
                       <Text type="secondary" style={{ fontSize: 11 }}>性能潜力 PP</Text>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                         <Text strong style={{ fontSize: 20, color: '#eb2f96' }}>{metrics.pp.toFixed(3)}</Text>
-                        <Tag size="small" color={metrics.pp >= 1.33 ? 'success' : metrics.pp >= 1.0 ? 'warning' : 'error'}>
+                        <Tag color={metrics.pp >= 1.33 ? 'success' : metrics.pp >= 1.0 ? 'warning' : 'error'}>
                           {metrics.pp >= 1.33 ? '良好' : metrics.pp >= 1.0 ? '尚可' : '不足'}
                         </Tag>
                       </div>
@@ -624,12 +627,12 @@ const SPCRecommendation: React.FC<SPCRecommendationProps> = ({
                 <Card type="inner" size="small">
                   <Statistic
                     title="合格率"
-                    value={metrics.yieldRate !== undefined && !isNaN(metrics.yieldRate) ? metrics.yieldRate : 0}
+                    value={metrics.passRate !== undefined && !isNaN(metrics.passRate) ? metrics.passRate : 0}
                     precision={2}
                     suffix="%"
                     valueStyle={{
                       fontSize: 18,
-                      color: (metrics.yieldRate || 0) >= 99 ? '#52c41a' : (metrics.yieldRate || 0) >= 95 ? '#faad14' : '#ff4d4f',
+                      color: (metrics.passRate || 0) >= 99 ? '#52c41a' : (metrics.passRate || 0) >= 95 ? '#faad14' : '#ff4d4f',
                     }}
                   />
                 </Card>

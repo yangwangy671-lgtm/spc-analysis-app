@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Layout, Row, Col, Button, Space, message, Upload, Card } from 'antd';
+import { Layout, Row, Col, Button, Space, message, Card } from 'antd';
 import { QuestionCircleOutlined, GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import SideNavigation from './components/SideNavigation';
 import HorizontalParameterPanel from './components/ParameterPanel/HorizontalPanel';
@@ -7,7 +7,6 @@ import ConfigOverview from './components/ConfigOverview';
 import ChartCard from './components/ChartCard';
 import SPCRecommendation from './components/SPCRecommendation';
 import DataImportDrawer from './components/DataImportDrawer';
-import { parseExcelFile, parseCSVFile, validateData } from './utils/excelHandler';
 import { exportProfessionalReport } from './utils/excelReportExporter';
 import { calculateAllMetrics, calculateXbarRLimits, calculateIMRLimits, mean, range, shapiroWilkTest } from './utils/spcCalculator';
 import { detectAllAnomalies } from './utils/anomalyDetector';
@@ -353,33 +352,6 @@ function App() {
 
   const handlePrintReport = () => {
     window.print();
-  };
-
-  const handleFileUpload = async (file: File) => {
-    try {
-      let excelData;
-      const extension = file.name.toLowerCase().split('.').pop();
-
-      if (extension === 'csv') {
-        excelData = await parseCSVFile(file);
-      } else if (extension === 'xlsx' || extension === 'xls') {
-        excelData = await parseExcelFile(file);
-      } else {
-        throw new Error('不支持的文件格式');
-      }
-
-      const validationResult = validateData(excelData.data);
-      if (!validationResult.valid) {
-        message.error(`数据验证失败: ${validationResult.errors.join(', ')}`);
-        return false;
-      }
-
-      handleDataImported(excelData.data, excelData.metadata);
-      return false;
-    } catch (error) {
-      message.error(`文件导入失败: ${error instanceof Error ? error.message : '未知错误'}`);
-      return false;
-    }
   };
 
   // 渲染主内容区域

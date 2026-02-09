@@ -20,13 +20,11 @@ import {
   Tag,
 } from 'antd';
 import {
-  UploadOutlined,
   FileExcelOutlined,
   DownloadOutlined,
   DatabaseOutlined,
   EditOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
   ExclamationCircleOutlined,
   InboxOutlined,
 } from '@ant-design/icons';
@@ -36,7 +34,7 @@ import { downloadTemplate, downloadCSVTemplate } from '../../utils/templateGener
 import type { RawDataRow, ExcelData, ValidationResult } from '../../types';
 
 const { TabPane } = Tabs;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Paragraph } = Typography;
 const { Dragger } = Upload;
 
 interface DataImportDrawerProps {
@@ -285,7 +283,7 @@ const DataImportDrawer: React.FC<DataImportDrawerProps> = ({
       key: 'action',
       width: 100,
       fixed: 'right' as const,
-      render: (_: any, record: RawDataRow, index: number) => {
+      render: (_: any, _record: RawDataRow, index: number) => {
         const errorRow = errorRows.find(err => err.rowIndex === index);
         return errorRow ? (
           <Space>
@@ -469,7 +467,7 @@ const DataImportDrawer: React.FC<DataImportDrawerProps> = ({
                     size="small"
                     rowKey={(_, index) => index!}
                     scroll={{ x: 800 }}
-                    rowClassName={(record, index) =>
+                    rowClassName={(_record, index) =>
                       errorRows.some(err => err.rowIndex === index) ? 'error-row' : ''
                     }
                   />

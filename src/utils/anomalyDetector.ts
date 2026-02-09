@@ -63,7 +63,7 @@ export function rule2_NineConsecutiveSameSide(data: number[], center: number): A
     }
 
     if (consecutiveCount >= minConsecutive) {
-      const avgDeviation = Math.abs(value - center);
+      // 已达到连续点数阈值，记录异常
       anomalies.push({
         index,
         value,
