@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Layout, Row, Col, Button, Space, message, Card } from 'antd';
-import { QuestionCircleOutlined, GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, PrinterOutlined } from '@ant-design/icons';
+import { GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import SideNavigation from './components/SideNavigation';
 import HorizontalParameterPanel from './components/ParameterPanel/HorizontalPanel';
 import ConfigOverview from './components/ConfigOverview';
@@ -991,14 +991,6 @@ function App() {
                   disabled={!metrics}
                 >
                   打印
-                </Button>
-
-                <Button
-                  type="text"
-                  icon={<QuestionCircleOutlined />}
-                  onClick={() => window.open('/SPC使用说明.html', '_blank')}
-                >
-                  帮助
                 </Button>
 
                 <Button
