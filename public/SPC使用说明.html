@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPC统计过程控制 - 使用说明文档</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+        h1 {
+            color: #1890ff;
+            font-size: 32px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #1890ff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #262626;
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 10px;
+            border-left: 4px solid #1890ff;
+        }
+        h3 {
+            color: #595959;
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .intro {
+            background: #e6f7ff;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            border-left: 4px solid #1890ff;
+        }
+        .formula {
+            background: #fafafa;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 3px solid #52c41a;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .note {
+            background: #fffbe6;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 3px solid #faad14;
+        }
+        .warning {
+            background: #fff2e8;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 3px solid #fa8c16;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #e8e8e8;
+            text-align: left;
+        }
+        th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .green { color: #52c41a; font-weight: bold; }
+        .yellow { color: #faad14; font-weight: bold; }
+        .red { color: #f5222d; font-weight: bold; }
+        ul, ol {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #c41d7f;
+        }
+        .example {
+            background: #f0f5ff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 SPC统计过程控制 - 使用说明文档</h1>
+
+        <div class="intro">
+            <p><strong>SPC (Statistical Process Control)</strong> 即统计过程控制，是一种利用统计方法对过程中的各个阶段进行监控，以达到改进产品质量的目的。本系统提供完整的SPC分析功能，帮助您实时监控生产过程，及时发现异常，提高产品质量。</p>
+        </div>
+
+        <h2>📚 一、核心概念详解</h2>
+
+        <h3>1.1 过程能力指数</h3>
+
+        <h4>🔹 CP (Process Capability Index - 过程能力指数)</h4>
+        <p><strong>定义：</strong>CP是衡量过程能力的基本指标，反映过程输出分布的宽度与规格容差的比值关系，仅考虑过程的离散程度，不考虑过程均值的偏移。</p>
+
+        <div class="formula">
+            <strong>计算公式：</strong><br>
+            CP = (USL - LSL) / (6σ)<br><br>
+            其中：<br>
+            • USL = 规格上限 (Upper Specification Limit)<br>
+            • LSL = 规格下限 (Lower Specification Limit)<br>
+            • σ = 过程标准差
+        </div>
+
+        <p><strong>物理意义：</strong></p>
+        <ul>
+            <li><strong>6σ</strong> 代表过程分布的实际宽度（覆盖99.73%的数据）</li>
+            <li><strong>USL-LSL</strong> 代表客户允许的规格宽度</li>
+            <li>CP值越大，说明过程输出越集中，过程能力越强</li>
+        </ul>
+
+        <h4>🔹 CPK (Corrected Process Capability Index - 修正过程能力指数)</h4>
+        <p><strong>定义：</strong>CPK是在CP基础上考虑了过程均值偏移的影响，是最常用的过程能力评价指标。它同时考虑过程的离散程度和中心位置。</p>
+
+        <div class="formula">
+            <strong>计算公式：</strong><br>
+            CPK = min( CPU, CPL )<br><br>
+            其中：<br>
+            • CPU = (USL - μ) / (3σ)  [上限能力]<br>
+            • CPL = (μ - LSL) / (3σ)  [下限能力]<br>
+            • μ = 过程均值
+        </div>
+
+        <p><strong>关键理解：</strong></p>
+        <ul>
+            <li>CPK取上下两个方向中较小的值，确保两个方向都满足要求</li>
+            <li>当过程完全居中时，CPK = CP</li>
+            <li>当过程偏移时，CPK < CP，偏移越大，CPK越小</li>
+            <li>CPK是实际生产中最重要的指标</li>
+        </ul>
+
+        <h4>🔹 PP 和 PPK (Process Performance Index - 过程性能指数)</h4>
+        <p><strong>区别：</strong></p>
+        <table>
+            <tr>
+                <th>指标</th>
+                <th>标准差计算</th>
+                <th>适用场景</th>
+            </tr>
+            <tr>
+                <td><strong>CP / CPK</strong></td>
+                <td>样本标准差（除以n-1）</td>
+                <td>短期能力，反映过程的固有能力</td>
+            </tr>
+            <tr>
+                <td><strong>PP / PPK</strong></td>
+                <td>总体标准差（除以n）</td>
+                <td>长期性能，包含所有变异源</td>
+            </tr>
+        </table>
+
+        <h4>🔹 能力等级判定标准</h4>
+        <table>
+            <tr>
+                <th>CPK值</th>
+                <th>能力等级</th>
+                <th>颜色标识</th>
+                <th>含义</th>
+                <th>建议措施</th>
+            </tr>
+            <tr>
+                <td>CPK ≥ 1.67</td>
+                <td>优秀 (A级)</td>
+                <td class="green">●</td>
+                <td>过程能力非常充分</td>
+                <td>维持现状，可考虑拓宽规格</td>
+            </tr>
+            <tr>
+                <td>1.33 ≤ CPK < 1.67</td>
+                <td>良好 (B级)</td>
+                <td class="green">●</td>
+                <td>过程能力充分</td>
+                <td>继续保持，定期监控</td>
+            </tr>
+            <tr>
+                <td>1.00 ≤ CPK < 1.33</td>
+                <td>尚可 (C级)</td>
+                <td class="yellow">●</td>
+                <td>过程能力边缘</td>
+                <td>需要改进，加强控制</td>
+            </tr>
+            <tr>
+                <td>0.67 ≤ CPK < 1.00</td>
+                <td>不足 (D级)</td>
+                <td class="red">●</td>
+                <td>过程能力不足</td>
+                <td>必须改进，100%检查</td>
+            </tr>
+            <tr>
+                <td>CPK < 0.67</td>
+                <td>严重不足 (E级)</td>
+                <td class="red">●</td>
+                <td>过程能力严重不足</td>
+                <td>立即停止生产，重新设计</td>
+            </tr>
+        </table>
+
+        <div class="note">
+            <strong>💡 工程实践建议：</strong><br>
+            • 汽车行业通常要求 CPK ≥ 1.33<br>
+            • 关键特性（安全、法规）通常要求 CPK ≥ 1.67<br>
+            • 新产品导入初期允许 CPK ≥ 1.00，但需持续改进
+        </div>
+
+        <h3>1.2 控制图类型</h3>
+
+        <h4>🔹 均值-极差图 (X-bar & R Chart)</h4>
+        <p><strong>适用场景：</strong>子组数据，每个子组包含2-25个测量值</p>
+        <p><strong>组成：</strong></p>
+        <ul>
+            <li><strong>X-bar图：</strong>监控过程均值的变化（反映过程中心是否偏移）</li>
+            <li><strong>R图：</strong>监控过程离散度的变化（反映过程稳定性）</li>
+        </ul>
+
+        <div class="formula">
+            <strong>控制限计算：</strong><br><br>
+            <strong>X-bar图：</strong><br>
+            • 中心线 CL = X̄̄ (各子组均值的平均值)<br>
+            • 上控制限 UCL = X̄̄ + A₂ × R̄<br>
+            • 下控制限 LCL = X̄̄ - A₂ × R̄<br><br>
+
+            <strong>R图：</strong><br>
+            • 中心线 CL = R̄ (各子组极差的平均值)<br>
+            • 上控制限 UCL = D₄ × R̄<br>
+            • 下控制限 LCL = D₃ × R̄<br><br>
+
+            其中 A₂, D₃, D₄ 为SPC常数，取决于子组大小n
+        </div>
+
+        <h4>🔹 单值-移动极差图 (I-MR Chart)</h4>
+        <p><strong>适用场景：</strong>单值数据，无法或不需要分组的情况</p>
+        <ul>
+            <li>测量成本高（破坏性试验）</li>
+            <li>生产速度慢（一天一个产品）</li>
+            <li>产品批量小</li>
+            <li>自动化测量系统</li>
+        </ul>
+
+        <h3>1.3 SPC常数表</h3>
+        <p>以下是常用子组大小的SPC常数（系统已内置）：</p>
+        <table>
+            <tr>
+                <th>子组大小 n</th>
+                <th>A₂</th>
+                <th>D₃</th>
+                <th>D₄</th>
+                <th>d₂</th>
+            </tr>
+            <tr><td>2</td><td>1.880</td><td>0</td><td>3.267</td><td>1.128</td></tr>
+            <tr><td>3</td><td>1.023</td><td>0</td><td>2.575</td><td>1.693</td></tr>
+            <tr><td>4</td><td>0.729</td><td>0</td><td>2.282</td><td>2.059</td></tr>
+            <tr><td>5</td><td>0.577</td><td>0</td><td>2.115</td><td>2.326</td></tr>
+            <tr><td>10</td><td>0.308</td><td>0.223</td><td>1.777</td><td>3.078</td></tr>
+        </table>
+
+        <h2>🎯 二、西方电气8大异常检测规则</h2>
+
+        <p>控制图上的点位置遵循一定的规律，当出现以下模式时，即使点未超出控制限，也表明过程可能失控。</p>
+
+        <h3>2.1 规则说明</h3>
+
+        <table>
+            <tr>
+                <th>规则</th>
+                <th>描述</th>
+                <th>等级</th>
+                <th>可能原因</th>
+            </tr>
+            <tr>
+                <td><strong>规则1</strong></td>
+                <td>单点超出±3σ控制限</td>
+                <td class="red">严重</td>
+                <td>设备故障、原料批次变化、操作失误</td>
+            </tr>
+            <tr>
+                <td><strong>规则2</strong></td>
+                <td>连续9点在中心线同侧</td>
+                <td class="yellow">警告</td>
+                <td>过程均值偏移、系统性误差</td>
+            </tr>
+            <tr>
+                <td><strong>规则3</strong></td>
+                <td>连续6点单调递增或递减</td>
+                <td class="yellow">警告</td>
+                <td>工具磨损、温度漂移、操作员疲劳</td>
+            </tr>
+            <tr>
+                <td><strong>规则4</strong></td>
+                <td>连续14点交替上下</td>
+                <td class="yellow">警告</td>
+                <td>两个过程交替、温度循环</td>
+            </tr>
+            <tr>
+                <td><strong>规则5</strong></td>
+                <td>连续3点中有2点在2σ-3σ区域（A区）</td>
+                <td class="yellow">警告</td>
+                <td>过程离散度增大</td>
+            </tr>
+            <tr>
+                <td><strong>规则6</strong></td>
+                <td>连续5点中有4点在1σ-2σ区域（B区）或更远</td>
+                <td>提示</td>
+                <td>过程离散度可能增大</td>
+            </tr>
+            <tr>
+                <td><strong>规则7</strong></td>
+                <td>连续15点在1σ范围内（C区）</td>
+                <td>提示</td>
+                <td>数据分层、过度调整</td>
+            </tr>
+            <tr>
+                <td><strong>规则8</strong></td>
+                <td>连续8点在1σ范围外（任意侧）</td>
+                <td class="yellow">警告</td>
+                <td>多个过程混合、分布双峰</td>
+            </tr>
+        </table>
+
+        <div class="warning">
+            <strong>⚠️ 处理建议：</strong><br>
+            1. <strong>严重异常（规则1）：</strong>立即停止生产，查找原因，隔离产品<br>
+            2. <strong>警告异常（规则2-5,8）：</strong>加强监控，启动调查，准备纠正措施<br>
+            3. <strong>提示异常（规则6-7）：</strong>记录观察，关注趋势，必要时调整
+        </div>
+
+        <h2>📖 三、使用操作指南</h2>
+
+        <h3>3.1 数据准备</h3>
+
+        <h4>Excel数据格式要求：</h4>
+        <ol>
+            <li><strong>多列格式</strong>（用于X-bar & R图）：
+                <div class="example">
+                    时间戳, 组号, 测量值1, 测量值2, 测量值3, 测量值4, 测量值5<br>
+                    2024-01-01 08:00, 1, 10.5, 10.3, 10.7, 10.4, 10.6<br>
+                    2024-01-01 09:00, 2, 10.8, 10.6, 10.9, 10.7, 10.5
+                </div>
+            </li>
+            <li><strong>单列格式</strong>（用于I-MR图）：
+                <div class="example">
+                    时间戳, 测量值<br>
+                    2024-01-01 08:00, 10.5<br>
+                    2024-01-01 09:00, 10.8
+                </div>
+            </li>
+        </ol>
+
+        <h3>3.2 操作步骤</h3>
+
+        <h4>步骤1：导入数据</h4>
+        <ul>
+            <li>点击或拖拽Excel/CSV文件到上传区域</li>
+            <li>系统自动解析并显示前10行预览</li>
+            <li>检查数据验证结果，确认无错误</li>
+        </ul>
+
+        <h4>步骤2：配置参数</h4>
+        <ul>
+            <li><strong>规格上限(USL)：</strong>根据产品图纸或客户要求设置</li>
+            <li><strong>规格下限(LSL)：</strong>根据产品图纸或客户要求设置</li>
+            <li><strong>目标值：</strong>通常为(USL+LSL)/2，也可根据实际设定</li>
+            <li><strong>子组大小：</strong>通常选择4-5个，不超过25个</li>
+            <li><strong>控制图类型：</strong>有子组选X-bar & R，单值选I-MR</li>
+            <li><strong>异常检测规则：</strong>建议全选或至少选择规则1-3</li>
+        </ul>
+
+        <h4>步骤3：分析结果</h4>
+        <ul>
+            <li>查看右侧<strong>过程能力指标</strong>，重点关注CPK值和状态颜色</li>
+            <li>查看<strong>控制图</strong>：
+                <ul>
+                    <li>X-bar图：观察过程均值是否稳定居中</li>
+                    <li>R图：观察过程离散度是否稳定</li>
+                    <li>红色菱形标记为异常点，鼠标悬停查看详情</li>
+                </ul>
+            </li>
+            <li>查看<strong>过程能力直方图</strong>：
+                <ul>
+                    <li>绿色曲线为正态分布拟合</li>
+                    <li>红色虚线为规格限位置</li>
+                    <li>观察数据是否正态分布，是否超出规格限</li>
+                </ul>
+            </li>
+            <li>查看<strong>数据表格</strong>：红/黄色行为异常数据</li>
+        </ul>
+
+        <h4>步骤4：导出报告</h4>
+        <ul>
+            <li>点击<strong>"导出Excel"</strong>按钮</li>
+            <li>报告包含：原始数据、统计摘要、异常点列表</li>
+            <li>可用于存档、汇报、追溯</li>
+        </ul>
+
+        <h2>💡 四、常见问题与解答</h2>
+
+        <h3>Q1: CPK值多少才算合格？</h3>
+        <p><strong>A:</strong> 一般要求CPK ≥ 1.33。汽车行业IATF 16949标准要求CPK ≥ 1.33；关键特性要求CPK ≥ 1.67。具体要求以客户和行业标准为准。</p>
+
+        <h3>Q2: 为什么我的CPK是负数或很小？</h3>
+        <p><strong>A:</strong> 可能原因：</p>
+        <ul>
+            <li>过程均值严重偏移规格中心</li>
+            <li>过程离散度太大</li>
+            <li>规格限设置错误</li>
+            <li>数据输入错误（小数点、单位等）</li>
+        </ul>
+        <p><strong>解决：</strong>检查数据和参数设置，调整过程参数，改进设备精度。</p>
+
+        <h3>Q3: 子组大小如何选择？</h3>
+        <p><strong>A:</strong> 推荐原则：</p>
+        <ul>
+            <li>常规选择：<strong>n=4或5</strong>（平衡敏感度和效率）</li>
+            <li>小批量生产：n=2或3</li>
+            <li>自动化测量：可选较大值，n=10-25</li>
+            <li>同一子组内的样本应在<strong>短时间内、相同条件下</strong>采集</li>
+        </ul>
+
+        <h3>Q4: X-bar图和R图哪个更重要？</h3>
+        <p><strong>A:</strong> 两个图同等重要，需要<strong>同时</strong>满足要求：</p>
+        <ul>
+            <li><strong>R图</strong>反映过程稳定性，必须<strong>先受控</strong></li>
+            <li><strong>X-bar图</strong>反映过程准确性，在R图受控后分析</li>
+            <li>如果R图失控，说明过程离散度不稳定，此时分析X-bar图没有意义</li>
+        </ul>
+
+        <h3>Q5: 所有数据都在控制限内，为什么还有异常点？</h3>
+        <p><strong>A:</strong> 因为启用了西方电气8大规则。即使单个点在控制限内，点的<strong>排列模式</strong>也可能表明过程异常。这些规则更敏感，能更早发现问题。</p>
+
+        <h3>Q6: 正态性检验P值是什么？</h3>
+        <p><strong>A:</strong> P值表示数据符合正态分布的概率：</p>
+        <ul>
+            <li><strong>P ≥ 0.05：</strong>数据近似正态分布，可以使用SPC方法</li>
+            <li><strong>P < 0.05：</strong>数据显著偏离正态分布，CPK值可能不准确</li>
+            <li>如果不正态，考虑：数据转换、更换分析方法、查找偏离原因</li>
+        </ul>
+
+        <h2>🔧 五、最佳实践建议</h2>
+
+        <h3>5.1 数据采集建议</h3>
+        <ul>
+            <li>✅ 确保测量系统稳定可靠（建议先做MSA分析）</li>
+            <li>✅ 子组内样本在相近时间、相同条件下采集</li>
+            <li>✅ 避免混合不同批次、不同设备的数据</li>
+            <li>✅ 记录采集时间、操作员、设备等信息</li>
+            <li>✅ 至少采集20-25个子组（100-125个数据点）</li>
+        </ul>
+
+        <h3>5.2 过程改进建议</h3>
+        <ul>
+            <li><strong>CPK < 1.0：</strong>立即行动
+                <ul>
+                    <li>分析根本原因（5Why、鱼骨图）</li>
+                    <li>实施纠正措施</li>
+                    <li>100%检验，隔离不合格品</li>
+                </ul>
+            </li>
+            <li><strong>1.0 ≤ CPK < 1.33：</strong>持续改进
+                <ul>
+                    <li>减少过程变异</li>
+                    <li>调整过程中心</li>
+                    <li>加强过程监控</li>
+                </ul>
+            </li>
+            <li><strong>CPK ≥ 1.33：</strong>维持并优化
+                <ul>
+                    <li>标准化最佳实践</li>
+                    <li>定期验证能力</li>
+                    <li>考虑拓宽规格或降低成本</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>5.3 控制图使用建议</h3>
+        <ul>
+            <li>📌 <strong>实时更新：</strong>每班次或每小时更新一次</li>
+            <li>📌 <strong>现场张贴：</strong>在生产现场显眼位置张贴</li>
+            <li>📌 <strong>全员培训：</strong>确保操作员理解图表含义</li>
+            <li>📌 <strong>快速响应：</strong>出现异常立即采取措施</li>
+            <li>📌 <strong>定期审查：</strong>每周/月审查趋势，持续改进</li>
+        </ul>
+
+        <h2>📞 六、技术支持</h2>
+
+        <p>如需帮助，请参考：</p>
+        <ul>
+            <li>📖 系统内置示例数据：<code>public/sample-data.csv</code></li>
+            <li>💬 GitHub Issues：报告问题和建议</li>
+            <li>📧 技术支持：查看项目README获取联系方式</li>
+        </ul>
+
+        <div class="note">
+            <p><strong>参考标准：</strong></p>
+            <ul style="margin-bottom: 0;">
+                <li>GB/T 4091-2001 常规控制图</li>
+                <li>GB/T 17989-2000 控制图</li>
+                <li>IATF 16949:2016 汽车行业质量管理体系</li>
+                <li>AIAG SPC手册（第2版）</li>
+            </ul>
+        </div>
+
+        <hr style="margin: 40px 0; border: none; border-top: 2px solid #e8e8e8;">
+
+        <p style="text-align: center; color: #999; font-size: 14px;">
+            © 2026 SPC统计过程控制分析平台 | 基于React + TypeScript + ECharts开发
+        </p>
+    </div>
+</body>
+</html>

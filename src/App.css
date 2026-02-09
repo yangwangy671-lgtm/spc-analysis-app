@@ -1,0 +1,432 @@
+/* SPC 平台专用样式 */
+
+/* 左侧导航栏 */
+.side-navigation {
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.side-nav-header {
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+}
+
+.side-nav-header .menu-icon {
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.side-nav-header .menu-icon:hover {
+  transform: scale(1.1);
+}
+
+.side-nav-header .logo-text {
+  color: white;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.side-nav-menu {
+  flex: 1;
+  border: none;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+/* 菜单项样式优化 */
+.side-nav-menu .ant-menu-item,
+.side-nav-menu .ant-menu-submenu-title {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 12px;
+  border-radius: 8px;
+  padding-left: 20px !important;
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.side-nav-menu .ant-menu-item-icon {
+  font-size: 18px;
+  color: #9b9bb4;
+}
+
+.side-nav-menu .ant-menu-item-selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.side-nav-menu .ant-menu-item-selected .ant-menu-item-icon {
+  color: white;
+}
+
+.side-nav-menu .ant-menu-item:hover,
+.side-nav-menu .ant-menu-submenu-title:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.side-nav-menu .ant-menu-submenu-arrow {
+  color: #9b9bb4;
+}
+
+.side-nav-menu .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+  color: #667eea;
+}
+
+.side-nav-menu .ant-menu-sub {
+  background: #fafafa !important;
+}
+
+.side-nav-menu .ant-menu-sub .ant-menu-item {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 52px !important;
+  font-size: 13px;
+}
+
+/* 顶部导航栏优化 */
+.spc-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  padding: 0 var(--spacing-lg);
+  height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.spc-header-title {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.spc-header .ant-btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-weight: 500;
+}
+
+.spc-header .ant-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.spc-header .ant-btn-text {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.spc-header .ant-btn-text:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 左侧参数面板优化 */
+.spc-sidebar {
+  background: var(--color-bg-container);
+  border-right: 1px solid var(--color-border-light);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
+}
+
+.spc-sidebar-content {
+  padding: var(--spacing-md);
+}
+
+/* 主内容区优化 */
+.spc-content {
+  background: var(--color-bg-layout);
+  padding: var(--spacing-md);
+  overflow: auto;
+}
+
+/* 卡片网格布局优化 */
+.spc-card-grid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+/* 图表卡片增强 */
+.spc-chart-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition-base);
+  height: 400px;
+  background: white;
+}
+
+.spc-chart-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.spc-chart-card .ant-card-head {
+  background: linear-gradient(to right, #fafafa, #ffffff);
+  border-bottom: 2px solid var(--color-primary-light);
+  padding: 12px var(--spacing-md);
+}
+
+.spc-chart-card .ant-card-head-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.spc-chart-card .ant-card-body {
+  padding: var(--spacing-md);
+  height: calc(100% - 57px);
+}
+
+/* 指标卡片增强 */
+.spc-metrics-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  height: 400px;
+}
+
+.spc-metrics-card .ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.spc-metrics-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+}
+
+.spc-metrics-card .ant-statistic-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.spc-metrics-card .ant-statistic-content {
+  color: white;
+}
+
+/* 数据表格卡片 */
+.spc-table-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.spc-table-card .ant-card-head {
+  background: linear-gradient(to right, #fafafa, #ffffff);
+  border-bottom: 2px solid var(--color-primary-light);
+}
+
+.spc-table-card .ant-card-body {
+  padding: var(--spacing-md);
+  background: white;
+}
+
+/* SPC分析卡片 */
+.spc-analysis-card {
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+}
+
+.spc-analysis-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.spc-analysis-card .ant-card-head {
+  background: linear-gradient(to right, #f8f9fa, #ffffff);
+  border-bottom: 1px solid #e8e8e8;
+  min-height: 42px;
+  padding: 8px 16px;
+}
+
+.spc-analysis-card .ant-card-head-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.spc-analysis-card .ant-card-body {
+  padding: 16px;
+}
+
+/* 状态标签优化 */
+.status-tag-normal {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+  color: #52c41a;
+  font-weight: 600;
+}
+
+.status-tag-warning {
+  background: #fffbe6;
+  border-color: #ffe58f;
+  color: #faad14;
+  font-weight: 600;
+}
+
+.status-tag-critical {
+  background: #fff2f0;
+  border-color: #ffccc7;
+  color: #ff4d4f;
+  font-weight: 600;
+}
+
+/* 文件信息显示 */
+.file-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 13px;
+}
+
+/* 加载动画优化 */
+.spc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+/* 配置总览页面样式 */
+.config-overview {
+  background: var(--color-bg-layout);
+}
+
+.config-overview .ant-card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-base);
+}
+
+.config-overview .ant-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.config-overview .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.config-overview .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+}
+
+.config-overview .ant-form-item-label > label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.config-overview .ant-input-number,
+.config-overview .ant-select {
+  width: 100%;
+  border-radius: var(--radius-md);
+}
+
+.config-overview .ant-switch {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.config-overview .ant-switch-checked {
+  background: var(--color-primary);
+}
+
+.config-overview .ant-collapse {
+  background: transparent;
+  border: none;
+}
+
+.config-overview .ant-collapse-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+.config-overview .ant-collapse-header {
+  padding: 12px 16px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.config-overview .ant-checkbox-wrapper {
+  margin: 0;
+  padding: 4px 0;
+}
+
+/* 打印样式优化 */
+@media print {
+  .spc-header,
+  .spc-sidebar,
+  .ant-btn {
+    display: none !important;
+  }
+
+  .spc-content {
+    padding: 0;
+  }
+
+  .spc-chart-card,
+  .spc-table-card {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* 响应式优化 */
+@media (max-width: 1200px) {
+  .spc-content {
+    padding: var(--spacing-sm);
+  }
+
+  .spc-card-grid {
+    gap: var(--spacing-sm);
+  }
+
+  .spc-chart-card {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .spc-header {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .spc-header-title {
+    font-size: 16px;
+  }
+
+  .spc-sidebar {
+    width: 100% !important;
+    max-width: 280px;
+  }
+
+  .spc-chart-card {
+    height: 300px;
+  }
+
+  .file-info-badge {
+    font-size: 11px;
+    padding: 4px 12px;
+  }
+}
