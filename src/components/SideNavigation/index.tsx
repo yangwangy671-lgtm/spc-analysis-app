@@ -121,6 +121,7 @@ const SideNavigation: React.FC<SideNavigationProps> = ({ collapsed = false, onCo
       children: [
         { key: 'config-1', label: '规格限配置' },
         { key: 'config-2', label: '控制限配置' },
+        { key: 'config-3', label: '报警规则管理' },
       ],
     },
   ];

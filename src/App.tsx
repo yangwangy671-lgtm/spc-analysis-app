@@ -4,6 +4,7 @@ import { GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, Pr
 import SideNavigation from './components/SideNavigation';
 import HorizontalParameterPanel from './components/ParameterPanel/HorizontalPanel';
 import ConfigOverview from './components/ConfigOverview';
+import AlarmRulesManager from './components/AlarmRulesManager';
 import ChartCard from './components/ChartCard';
 import SPCRecommendation from './components/SPCRecommendation';
 import DataImportDrawer from './components/DataImportDrawer';
@@ -28,6 +29,7 @@ type ViewMode =
   | 'histogram'      // 直方图
   | 'realtime'       // 实时监控
   | 'alarm'          // 报警管理
+  | 'alarm-rules'    // 报警规则管理
   | 'cpk'            // CPK 计算
   | 'normality'      // 正态性检验
   | 'trend'          // 趋势分析
@@ -77,6 +79,7 @@ function App() {
       'config': 'config',
       'config-1': 'config',
       'config-2': 'config',
+      'config-3': 'alarm-rules',
     };
     return mapping[key] || 'dashboard';
   };
@@ -356,6 +359,16 @@ function App() {
 
   // 渲染主内容区域
   const renderMainContent = () => {
+    // 报警规则管理无需数据，优先处理
+    if (viewMode === 'alarm-rules') {
+      return (
+        <AlarmRulesManager
+          parameters={parameters}
+          onParametersChange={setParameters}
+        />
+      );
+    }
+
     // 如果没有数据，显示欢迎页面
     if (!rawData || rawData.length === 0) {
       return (

@@ -60,6 +60,18 @@ export interface AnomalyResult {
   description: string;
 }
 
+export interface CustomAlarmRule {
+  id: number;
+  name: string;
+  description: string;
+  level: 'critical' | 'warning' | 'info';
+  enabled: boolean;
+  ruleType: 'consecutive_outside' | 'n_of_m_outside' | 'consecutive_inside' | 'consecutive_alternating';
+  totalCount: number;
+  triggerCount?: number;
+  sigmaThreshold: number;
+}
+
 export interface SPCParameters {
   usl: number;
   lsl: number;
@@ -67,6 +79,8 @@ export interface SPCParameters {
   subgroupSize: number;
   anomalyRules: number[];
   chartType: 'xbar-r' | 'i-mr';
+  alarmLevels?: Record<number, 'critical' | 'warning' | 'info'>;
+  customAlarmRules?: CustomAlarmRule[];
 }
 
 export interface ValidationResult {

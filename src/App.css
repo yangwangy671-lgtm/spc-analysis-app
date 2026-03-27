@@ -430,3 +430,10 @@
     padding: 4px 12px;
   }
 }
+
+/* 报警规则管理 - 已禁用规则行样式 */
+.alarm-rule-row-disabled td {
+  opacity: 0.45;
+  background-color: #fafafa !important;
+}
+
