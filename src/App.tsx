@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Layout, Row, Col, Button, Space, message, Card } from 'antd';
-import { GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, PrinterOutlined } from '@ant-design/icons';
+import { GithubOutlined, UploadOutlined, FileExcelOutlined, DownloadOutlined, PrinterOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import SideNavigation from './components/SideNavigation';
 import HorizontalParameterPanel from './components/ParameterPanel/HorizontalPanel';
 import ConfigOverview from './components/ConfigOverview';
@@ -59,6 +59,7 @@ function App() {
   const [anomalies, setAnomalies] = useState<AnomalyResult[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // 菜单键值映射到视图模式
   const menuKeyToViewMode = (key: string): ViewMode => {
@@ -958,12 +959,17 @@ function App() {
       {/* 左侧导航栏 */}
       <Sider
         width={240}
+        collapsed={sidebarCollapsed}
+        collapsedWidth={0}
         style={{
           height: '100vh',
           position: 'fixed',
           left: 0,
           top: 0,
           bottom: 0,
+          zIndex: 100,
+          transition: 'width 0.2s',
+          overflow: 'hidden',
         }}
       >
         <SideNavigation
@@ -979,8 +985,36 @@ function App() {
         />
       </Sider>
 
+      {/* 侧边栏折叠按钮（固定定位，始终可见） */}
+      <div
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        style={{
+          position: 'fixed',
+          left: sidebarCollapsed ? 0 : 228,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: 20,
+          height: 52,
+          background: '#001529',
+          borderRadius: '0 6px 6px 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 200,
+          transition: 'left 0.2s',
+          boxShadow: '2px 0 6px rgba(0,0,0,0.3)',
+        }}
+        title={sidebarCollapsed ? '展开导航栏' : '收起导航栏'}
+      >
+        {sidebarCollapsed
+          ? <RightOutlined style={{ color: '#fff', fontSize: 11 }} />
+          : <LeftOutlined style={{ color: '#fff', fontSize: 11 }} />
+        }
+      </div>
+
       {/* 右侧主内容区 */}
-      <Layout style={{ marginLeft: 240 }}>
+      <Layout style={{ marginLeft: sidebarCollapsed ? 0 : 240, transition: 'margin-left 0.2s' }}>
         <Header className="spc-header">
           <Row justify="end" align="middle" style={{ height: '100%', width: '100%' }}>
             <Col>
