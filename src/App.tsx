@@ -1070,7 +1070,9 @@ function App() {
 
         {/* Main Content - Full Width */}
         <Content className="spc-content" style={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
-          {renderMainContent()}
+          <div style={{ maxWidth: 1440, margin: '0 auto' }}>
+            {renderMainContent()}
+          </div>
         </Content>
       </Layout>
 
