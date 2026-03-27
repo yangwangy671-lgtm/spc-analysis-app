@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Card, Tabs, Typography, Table, Tag, Row, Col, Steps, Alert, Divider, Space, Timeline,
+  Card, Tabs, Typography, Table, Tag, Row, Col, Steps, Alert, Divider, Timeline,
 } from 'antd';
 import {
   LineChartOutlined, BarChartOutlined, BulbOutlined,

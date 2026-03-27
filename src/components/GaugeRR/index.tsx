@@ -29,13 +29,14 @@ interface GRRResults {
 
 interface Settings { appraisers: number; parts: number; trials: number; }
 
-// 初始化 3D 数据数组 [appraiser][part][trial]
-const initData = (s: Settings): number[][][] =>
-  Array.from({ length: s.appraisers }, () =>
-    Array.from({ length: s.parts }, () =>
-      Array(s.trials).fill(NaN)
-    )
-  );
+interface ResultRow {
+  key: string;
+  component: string;
+  value: string;
+  pct: number;
+  note: string;
+  bold?: boolean;
+}
 
 // 生成演示数据（模拟 3 人 × 10 零件 × 2 次 的典型 GR&R 数据）
 const genDemoData = (s: Settings): number[][][] => {
@@ -303,12 +304,12 @@ const GaugeRR: React.FC = () => {
                         columns={[
                           {
                             title: '变差分量', dataIndex: 'component',
-                            render: (v: string, r: { bold?: boolean }) => r.bold ? <Text strong>{v}</Text> : v,
+                          render: (v: string, r: ResultRow) => r.bold ? <Text strong>{v}</Text> : v,
                           },
                           { title: '标准差', dataIndex: 'value', width: 90 },
                           {
                             title: '% 占比', dataIndex: 'pct', width: 100,
-                            render: (v: number, r: { key: string }) => {
+                            render: (v: number, r: ResultRow) => {
                               const color = r.key === 'grr' ? (v < 10 ? '#52c41a' : v < 30 ? '#faad14' : '#f5222d') : '#1677ff';
                               return <Text strong style={{ color }}>{v}%</Text>;
                             },
