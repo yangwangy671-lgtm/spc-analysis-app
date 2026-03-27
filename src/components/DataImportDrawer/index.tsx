@@ -31,6 +31,7 @@ import {
 import type { UploadProps } from 'antd';
 import { parseExcelFile, parseCSVFile, validateData } from '../../utils/excelHandler';
 import { downloadTemplate, downloadCSVTemplate } from '../../utils/templateGenerator';
+import DatabaseConnector from '../DatabaseConnector';
 import type { RawDataRow, ExcelData, ValidationResult } from '../../types';
 
 const { TabPane } = Tabs;
@@ -575,26 +576,12 @@ const DataImportDrawer: React.FC<DataImportDrawerProps> = ({
             }
             key="database"
           >
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              <Alert
-                message="功能开发中"
-                description="数据库直连功能正在开发中，敬请期待。将支持 MySQL、PostgreSQL、SQL Server 等主流数据库。"
-                type="info"
-                showIcon
-              />
-
-              <Card title="预留接口说明" size="small">
-                <Paragraph>
-                  未来将支持以下功能：
-                </Paragraph>
-                <ul>
-                  <li>配置数据库连接（主机、端口、用户名、密码）</li>
-                  <li>选择数据表和字段映射</li>
-                  <li>设置数据筛选条件（时间范围、特定产品等）</li>
-                  <li>实时数据同步与自动更新</li>
-                </ul>
-              </Card>
-            </Space>
+            <DatabaseConnector
+              onDataImported={(data, metadata) => {
+                onDataImported(data, metadata);
+                handleDrawerClose();
+              }}
+            />
           </TabPane>
         </Tabs>
       </Drawer>
