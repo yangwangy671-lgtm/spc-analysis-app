@@ -21,6 +21,78 @@ interface ChartsPanelProps {
   chartType: 'xbar-r' | 'i-mr';
 }
 
+// 异常规则描述
+const RULE_DESCRIPTIONS: Record<number, string> = {
+  1: '超出3σ控制限',
+  2: '连续9点在中心线同侧',
+  3: '连续6点持续上升或下降',
+  4: '连续14点交替上下',
+  5: '连续2/3点超出2σ区域',
+  6: '连续4/5点超出1σ区域',
+  7: '连续15点在±1σ内',
+  8: '连续8点在±1σ外',
+};
+
+// 异常标注区块（图表下方）
+const AnomalyPanel: React.FC<{
+  anomalies: AnomalyResult[];
+  total: number;
+  updateTime: string;
+}> = ({ anomalies, total, updateTime }) => {
+  if (anomalies.length === 0) {
+    return (
+      <div style={{
+        padding: '8px 20px 10px',
+        borderTop: '1px solid #f0f0f0',
+        background: '#fafafa',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <span style={{ color: '#52c41a', fontSize: 13 }}>✓ 过程受控，无异常点</span>
+        <span style={{ color: '#aaa', fontSize: 12 }}>最后更新时间: {updateTime}</span>
+      </div>
+    );
+  }
+
+  // 按规则分组
+  const ruleGroups: Record<number, { description: string; indices: number[] }> = {};
+  anomalies.forEach(a => {
+    if (!ruleGroups[a.rule]) {
+      ruleGroups[a.rule] = {
+        description: RULE_DESCRIPTIONS[a.rule] || a.description,
+        indices: [],
+      };
+    }
+    ruleGroups[a.rule].indices.push(a.index + 1);
+  });
+
+  const oocPct = total > 0 ? (anomalies.length / total * 100).toFixed(4) : '0.0000';
+
+  return (
+    <div style={{
+      padding: '8px 20px 12px',
+      borderTop: '2px solid #fff1f0',
+      background: '#fff8f8',
+    }}>
+      {Object.entries(ruleGroups).map(([rule, { description, indices }]) => (
+        <div key={rule} style={{ color: '#cf1322', fontSize: 13, marginBottom: 3, display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>•</span>
+          <span>
+            {indices.length}个点{description}: <strong>{indices.join(', ')}</strong>
+          </span>
+        </div>
+      ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+        <span style={{ color: '#cf1322', fontSize: 13, fontWeight: 500 }}>
+          OOC: {anomalies.length}/{total}={oocPct}%
+        </span>
+        <span style={{ color: '#aaa', fontSize: 12 }}>最后更新时间: {updateTime}</span>
+      </div>
+    </div>
+  );
+};
+
 const ChartsPanel: React.FC<ChartsPanelProps> = ({
   xBarData,
   rData,
@@ -37,12 +109,13 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
 
   const fontSizeMap = {
-    small: { title: 16, legend: 12, axis: 11, axisName: 12, tooltip: 12 },
-    medium: { title: 18, legend: 14, axis: 13, axisName: 14, tooltip: 14 },
-    large: { title: 20, legend: 16, axis: 15, axisName: 16, tooltip: 16 },
+    small: { title: 14, legend: 11, axis: 10, axisName: 11, tooltip: 11 },
+    medium: { title: 16, legend: 13, axis: 12, axisName: 13, tooltip: 13 },
+    large: { title: 18, legend: 15, axis: 14, axisName: 15, tooltip: 15 },
   };
 
   const currentFontSize = fontSizeMap[fontSize];
+  const updateTime = new Date().toLocaleString('zh-CN', { hour12: false });
 
   // X-bar (or Individual) Chart Option
   const xBarChartOption: EChartsOption = useMemo(() => {
@@ -51,120 +124,134 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
     const limits = 'xBar' in controlLimits ? controlLimits.xBar : controlLimits.individual;
     const { center, ucl, lcl } = limits;
 
-    // Prepare anomaly points
+    // 异常点：大红圆点
     const anomalyPoints = anomalies
       .filter(a => a.level === 'critical' || a.level === 'warning')
       .map(a => [a.index, a.value]);
+
+    const seriesName = chartType === 'xbar-r' ? '均值' : '单值';
+    const centerLabel = chartType === 'xbar-r' ? `X̄=${center.toFixed(4)}` : `X̄=${center.toFixed(4)}`;
 
     return {
       title: {
         text: chartType === 'xbar-r' ? '均值控制图 (X-bar)' : '单值控制图 (I)',
         left: 'center',
-        textStyle: {
-          fontSize: currentFontSize.title,
-          fontWeight: 'bold',
-        },
         top: 10,
+        textStyle: { fontSize: currentFontSize.title, fontWeight: 'bold', color: '#333' },
       },
       tooltip: {
         trigger: 'axis',
-        textStyle: {
-          fontSize: currentFontSize.tooltip,
-        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: { fontSize: currentFontSize.tooltip, color: '#333' },
         formatter: (params: any) => {
-          let result = `组号 ${params[0].axisValue}<br/>`;
+          const idx = params[0]?.axisValue;
+          let result = `<div style="font-weight:bold;margin-bottom:4px">序号 ${idx}</div>`;
           params.forEach((param: any) => {
             if (param.seriesName === '异常点' && param.data) {
               const anomaly = anomalies.find(a => a.index === param.data[0]);
-              result += `${param.marker} ${param.seriesName}: ${param.data[1].toFixed(3)}<br/>`;
+              result += `${param.marker} <span style="color:#f5222d;font-weight:bold">异常: ${param.data[1].toFixed(4)}</span><br/>`;
               if (anomaly) {
-                result += `<span style="color: #999">规则${anomaly.rule}: ${anomaly.description}</span><br/>`;
+                result += `<span style="color:#f5222d;font-size:11px">规则${anomaly.rule}: ${anomaly.description}</span><br/>`;
               }
-            } else if (param.value !== null) {
-              result += `${param.marker} ${param.seriesName}: ${typeof param.value === 'number' ? param.value.toFixed(3) : param.value}<br/>`;
+            } else if (param.seriesName === seriesName && param.value !== null && param.value !== undefined) {
+              result += `${param.marker} ${param.seriesName}: <strong>${(param.value as number).toFixed(4)}</strong><br/>`;
             }
           });
           return result;
         },
       },
-      legend: {
-        data: [chartType === 'xbar-r' ? '均值' : '单值', '上限UCL', '中心线', '下限LCL', '异常点'],
-        top: 45,
-        textStyle: {
-          fontSize: currentFontSize.legend,
-        },
-        itemGap: 20,
-      },
+      legend: { show: false },
       grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '10%',
-        top: '100px',
-        containLabel: true,
+        left: 60,
+        right: 130,
+        bottom: 40,
+        top: 50,
+        containLabel: false,
       },
       xAxis: {
         type: 'category',
         data: groupNumbers,
-        name: '组号',
+        name: '序号',
         nameLocation: 'middle',
-        nameGap: 30,
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameGap: 25,
+        nameTextStyle: { fontSize: currentFontSize.axisName, color: '#666' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666' },
+        axisLine: { lineStyle: { color: '#ccc' } },
+        splitLine: { show: false },
       },
       yAxis: {
         type: 'value',
-        name: '测量值',
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        name: chartType === 'xbar-r' ? '均值' : '单值',
+        nameTextStyle: { fontSize: currentFontSize.axisName, fontWeight: 'bold', color: '#555' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666', formatter: (v: number) => v.toFixed(2) },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
       },
       series: [
         {
-          name: chartType === 'xbar-r' ? '均值' : '单值',
+          name: seriesName,
           type: 'line',
           data: xBarData,
-          itemStyle: { color: '#1890ff' },
-          lineStyle: { width: 2 },
+          itemStyle: { color: '#1a3a8a' },
+          lineStyle: { width: 2, color: '#1a3a8a' },
           symbol: 'circle',
-          symbolSize: 6,
-        },
-        {
-          name: '上限UCL',
-          type: 'line',
-          data: Array(xBarData.length).fill(ucl),
-          lineStyle: { type: 'dashed', color: '#f5222d', width: 2 },
-          symbol: 'none',
-        },
-        {
-          name: '中心线',
-          type: 'line',
-          data: Array(xBarData.length).fill(center),
-          lineStyle: { type: 'solid', color: '#52c41a', width: 2 },
-          symbol: 'none',
-        },
-        {
-          name: '下限LCL',
-          type: 'line',
-          data: Array(xBarData.length).fill(lcl),
-          lineStyle: { type: 'dashed', color: '#f5222d', width: 2 },
-          symbol: 'none',
+          symbolSize: 7,
+          markLine: {
+            silent: true,
+            symbol: ['none', 'none'],
+            animation: false,
+            data: [
+              {
+                yAxis: ucl,
+                lineStyle: { type: 'dashed' as const, color: '#f5222d', width: 1.5 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: `UCL=${ucl.toFixed(4)}`,
+                  color: '#f5222d',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+              {
+                yAxis: center,
+                lineStyle: { type: 'solid' as const, color: '#00bcd4', width: 2 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: centerLabel,
+                  color: '#00868a',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+              {
+                yAxis: lcl,
+                lineStyle: { type: 'dashed' as const, color: '#f5222d', width: 1.5 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: `LCL=${lcl.toFixed(4)}`,
+                  color: '#f5222d',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+            ],
+          },
         },
         {
           name: '异常点',
           type: 'scatter',
           data: anomalyPoints,
-          itemStyle: { color: '#ff4d4f' },
-          symbolSize: 10,
-          symbol: 'diamond',
+          itemStyle: { color: '#f5222d' },
+          symbolSize: 12,
+          symbol: 'circle',
           z: 10,
         },
       ],
@@ -178,101 +265,116 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
     const limits = 'r' in controlLimits ? controlLimits.r : controlLimits.movingRange;
     const { center, ucl, lcl } = limits;
 
+    const seriesName = chartType === 'xbar-r' ? '极差' : '移动极差';
+    const centerLabel = chartType === 'xbar-r' ? `R̄=${center.toFixed(4)}` : `MR̄=${center.toFixed(4)}`;
+
     return {
       title: {
         text: chartType === 'xbar-r' ? '极差控制图 (R)' : '移动极差控制图 (MR)',
         left: 'center',
-        textStyle: {
-          fontSize: currentFontSize.title,
-          fontWeight: 'bold',
-        },
         top: 10,
+        textStyle: { fontSize: currentFontSize.title, fontWeight: 'bold', color: '#333' },
       },
       tooltip: {
         trigger: 'axis',
-        textStyle: {
-          fontSize: currentFontSize.tooltip,
-        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: { fontSize: currentFontSize.tooltip, color: '#333' },
         formatter: (params: any) => {
-          let result = `组号 ${params[0].axisValue}<br/>`;
+          const idx = params[0]?.axisValue;
+          let result = `<div style="font-weight:bold;margin-bottom:4px">序号 ${idx}</div>`;
           params.forEach((param: any) => {
-            if (param.value !== null) {
-              result += `${param.marker} ${param.seriesName}: ${typeof param.value === 'number' ? param.value.toFixed(3) : param.value}<br/>`;
+            if (param.value !== null && param.value !== undefined && param.seriesName === seriesName) {
+              result += `${param.marker} ${param.seriesName}: <strong>${(param.value as number).toFixed(4)}</strong><br/>`;
             }
           });
           return result;
         },
       },
-      legend: {
-        data: [chartType === 'xbar-r' ? '极差' : '移动极差', '上限UCL', '中心线', '下限LCL'],
-        top: 45,
-        textStyle: {
-          fontSize: currentFontSize.legend,
-        },
-        itemGap: 20,
-      },
+      legend: { show: false },
       grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '10%',
-        top: '100px',
-        containLabel: true,
+        left: 60,
+        right: 130,
+        bottom: 40,
+        top: 50,
+        containLabel: false,
       },
       xAxis: {
         type: 'category',
         data: chartType === 'xbar-r' ? groupNumbers : groupNumbers.slice(1),
-        name: '组号',
+        name: '序号',
         nameLocation: 'middle',
-        nameGap: 30,
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameGap: 25,
+        nameTextStyle: { fontSize: currentFontSize.axisName, color: '#666' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666' },
+        axisLine: { lineStyle: { color: '#ccc' } },
+        splitLine: { show: false },
       },
       yAxis: {
         type: 'value',
-        name: chartType === 'xbar-r' ? '极差' : '移动极差',
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        name: seriesName,
+        min: 0,
+        nameTextStyle: { fontSize: currentFontSize.axisName, fontWeight: 'bold', color: '#555' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666', formatter: (v: number) => v.toFixed(2) },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
       },
       series: [
         {
-          name: chartType === 'xbar-r' ? '极差' : '移动极差',
+          name: seriesName,
           type: 'line',
           data: rData,
-          itemStyle: { color: '#722ed1' },
-          lineStyle: { width: 2 },
+          itemStyle: { color: '#1a3a8a' },
+          lineStyle: { width: 2, color: '#1a3a8a' },
           symbol: 'circle',
-          symbolSize: 6,
-        },
-        {
-          name: '上限UCL',
-          type: 'line',
-          data: Array(rData.length).fill(ucl),
-          lineStyle: { type: 'dashed', color: '#f5222d', width: 2 },
-          symbol: 'none',
-        },
-        {
-          name: '中心线',
-          type: 'line',
-          data: Array(rData.length).fill(center),
-          lineStyle: { type: 'solid', color: '#52c41a', width: 2 },
-          symbol: 'none',
-        },
-        {
-          name: '下限LCL',
-          type: 'line',
-          data: Array(rData.length).fill(lcl),
-          lineStyle: { type: 'dashed', color: '#f5222d', width: 2 },
-          symbol: 'none',
+          symbolSize: 7,
+          markLine: {
+            silent: true,
+            symbol: ['none', 'none'],
+            animation: false,
+            data: [
+              {
+                yAxis: ucl,
+                lineStyle: { type: 'dashed' as const, color: '#f5222d', width: 1.5 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: `UCL=${ucl.toFixed(4)}`,
+                  color: '#f5222d',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+              {
+                yAxis: center,
+                lineStyle: { type: 'solid' as const, color: '#00bcd4', width: 2 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: centerLabel,
+                  color: '#00868a',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+              {
+                yAxis: lcl,
+                lineStyle: { type: 'dashed' as const, color: '#f5222d', width: 1.5 },
+                label: {
+                  show: true,
+                  position: 'end' as const,
+                  formatter: `LCL=${lcl.toFixed(4)}`,
+                  color: '#f5222d',
+                  fontSize: currentFontSize.axis,
+                  backgroundColor: '#fff',
+                  padding: [2, 4],
+                },
+              },
+            ],
+          },
         },
       ],
     };
@@ -282,7 +384,6 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
   const histogramOption: EChartsOption = useMemo(() => {
     if (!metrics || allData.length === 0) return {};
 
-    // Calculate histogram bins
     const min = Math.min(...allData);
     const max = Math.max(...allData);
     const binCount = Math.min(20, Math.ceil(Math.sqrt(allData.length)));
@@ -295,123 +396,110 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
       const binStart = min + i * binWidth;
       const binEnd = binStart + binWidth;
       bins.push((binStart + binEnd) / 2);
-
       const count = allData.filter(v => v >= binStart && (i === binCount - 1 ? v <= binEnd : v < binEnd)).length;
       frequencies.push(count);
     }
 
-    // Generate normal distribution curve
     const normalCurve: number[] = bins.map(x => {
       const density = normalPDF(x, metrics.mean, metrics.stdDev);
-      return density * allData.length * binWidth; // Scale to match histogram
+      return density * allData.length * binWidth;
     });
 
     return {
       title: {
         text: '过程能力分布直方图',
         left: 'center',
-        textStyle: {
-          fontSize: currentFontSize.title,
-          fontWeight: 'bold',
-        },
         top: 10,
+        textStyle: { fontSize: currentFontSize.title, fontWeight: 'bold', color: '#333' },
       },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        textStyle: {
-          fontSize: currentFontSize.tooltip,
-        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: { fontSize: currentFontSize.tooltip },
       },
       legend: {
-        data: ['频数', '正态分布', '规格上限', '规格下限', '均值'],
-        top: 45,
-        textStyle: {
-          fontSize: currentFontSize.legend,
-        },
+        data: ['频数', '正态分布'],
+        top: 40,
+        textStyle: { fontSize: currentFontSize.legend },
         itemGap: 20,
       },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '10%',
-        top: '100px',
-        containLabel: true,
-      },
+      grid: { left: 60, right: 80, bottom: 40, top: 80, containLabel: false },
       xAxis: {
         type: 'value',
         name: '测量值',
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameTextStyle: { fontSize: currentFontSize.axisName, color: '#666' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666', formatter: (v: number) => v.toFixed(2) },
+        axisLine: { lineStyle: { color: '#ccc' } },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
       },
       yAxis: {
         type: 'value',
         name: '频数',
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameTextStyle: { fontSize: currentFontSize.axisName, color: '#666' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666' },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
       },
       series: [
         {
           name: '频数',
           type: 'bar',
           data: bins.map((bin, index) => [bin, frequencies[index]]),
-          itemStyle: { color: '#1890ff', opacity: 0.7 },
-          barWidth: '80%',
+          itemStyle: { color: '#4a90d9', opacity: 0.75, borderColor: '#2671b5', borderWidth: 0.5 },
+          barWidth: '90%',
         },
         {
           name: '正态分布',
           type: 'line',
           data: bins.map((bin, index) => [bin, normalCurve[index]]),
           smooth: true,
-          lineStyle: { color: '#52c41a', width: 3 },
+          lineStyle: { color: '#f5a623', width: 2.5 },
           symbol: 'none',
         },
         {
           name: '规格上限',
           type: 'line',
           markLine: {
-            data: [{ xAxis: usl, label: { formatter: 'USL' } }],
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ xAxis: usl }],
             lineStyle: { color: '#f5222d', type: 'dashed', width: 2 },
-            symbol: 'none',
+            label: { formatter: `USL=${usl.toFixed(4)}`, color: '#f5222d', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
         {
           name: '规格下限',
           type: 'line',
           markLine: {
-            data: [{ xAxis: lsl, label: { formatter: 'LSL' } }],
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ xAxis: lsl }],
             lineStyle: { color: '#f5222d', type: 'dashed', width: 2 },
-            symbol: 'none',
+            label: { formatter: `LSL=${lsl.toFixed(4)}`, color: '#f5222d', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
         {
           name: '均值',
           type: 'line',
           markLine: {
-            data: [{ xAxis: metrics.mean, label: { formatter: 'μ' } }],
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ xAxis: metrics.mean }],
             lineStyle: { color: '#722ed1', type: 'solid', width: 2 },
-            symbol: 'none',
+            label: { formatter: `μ=${metrics.mean.toFixed(4)}`, color: '#722ed1', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
       ],
     };
   }, [metrics, allData, usl, lsl, currentFontSize]);
 
-  // Scatter Chart Option - 散点图
+  // Scatter Chart Option
   const scatterChartOption: EChartsOption = useMemo(() => {
     if (allData.length === 0) return {};
 
-    // 计算趋势线（线性回归）
     const n = allData.length;
     const xValues = Array.from({ length: n }, (_, i) => i + 1);
     const sumX = xValues.reduce((a, b) => a + b, 0);
@@ -421,89 +509,70 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
-
     const trendLineData = xValues.map(x => [x, slope * x + intercept]);
-
-    // 准备散点数据
     const scatterData = allData.map((value, index) => [index + 1, value]);
 
     return {
       title: {
-        text: '散点图分析',
+        text: '数据散点图（含趋势线）',
         left: 'center',
-        textStyle: {
-          fontSize: currentFontSize.title,
-          fontWeight: 'bold',
-        },
         top: 10,
+        textStyle: { fontSize: currentFontSize.title, fontWeight: 'bold', color: '#333' },
       },
       tooltip: {
         trigger: 'item',
-        textStyle: {
-          fontSize: currentFontSize.tooltip,
-        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#ddd',
+        borderWidth: 1,
+        textStyle: { fontSize: currentFontSize.tooltip },
         formatter: (params: any) => {
           if (params.seriesName === '数据点') {
-            return `序号: ${params.data[0]}<br/>测量值: ${params.data[1].toFixed(3)}`;
+            return `序号: ${params.data[0]}<br/>测量值: <strong>${params.data[1].toFixed(4)}</strong>`;
           }
-          return `${params.seriesName}: ${params.data[1].toFixed(3)}`;
+          return `${params.seriesName}: ${params.data[1].toFixed(4)}`;
         },
       },
       legend: {
-        data: ['数据点', '趋势线', '规格上限', '规格下限', '均值'],
-        top: 45,
-        textStyle: {
-          fontSize: currentFontSize.legend,
-        },
+        data: ['数据点', '趋势线'],
+        top: 40,
+        textStyle: { fontSize: currentFontSize.legend },
         itemGap: 20,
       },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '10%',
-        top: '100px',
-        containLabel: true,
-      },
+      grid: { left: 60, right: 80, bottom: 40, top: 80, containLabel: false },
       xAxis: {
         type: 'value',
         name: '数据序号',
         nameLocation: 'middle',
-        nameGap: 30,
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameGap: 25,
+        nameTextStyle: { fontSize: currentFontSize.axisName, color: '#666' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666' },
+        axisLine: { lineStyle: { color: '#ccc' } },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
         min: 0,
         max: n + 1,
       },
       yAxis: {
         type: 'value',
         name: '测量值',
-        nameTextStyle: {
-          fontSize: currentFontSize.axisName,
-          fontWeight: 'bold',
-        },
-        axisLabel: {
-          fontSize: currentFontSize.axis,
-        },
+        nameTextStyle: { fontSize: currentFontSize.axisName, fontWeight: 'bold', color: '#555' },
+        axisLabel: { fontSize: currentFontSize.axis, color: '#666', formatter: (v: number) => v.toFixed(2) },
+        axisLine: { show: false },
+        splitLine: { lineStyle: { color: '#f0f0f0', type: 'dashed' } },
       },
       series: [
         {
           name: '数据点',
           type: 'scatter',
           data: scatterData,
-          itemStyle: { color: '#1890ff' },
-          symbolSize: 8,
+          itemStyle: { color: '#1a3a8a' },
+          symbolSize: 7,
           symbol: 'circle',
         },
         {
           name: '趋势线',
           type: 'line',
           data: trendLineData,
-          lineStyle: { color: '#722ed1', width: 2, type: 'solid' },
+          lineStyle: { color: '#f5a623', width: 2, type: 'solid' },
           symbol: 'none',
           smooth: false,
         },
@@ -511,27 +580,33 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
           name: '规格上限',
           type: 'line',
           markLine: {
-            data: [{ yAxis: usl, label: { formatter: 'USL', position: 'end' } }],
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ yAxis: usl }],
             lineStyle: { color: '#f5222d', type: 'dashed', width: 2 },
-            symbol: 'none',
+            label: { formatter: `USL=${usl.toFixed(4)}`, color: '#f5222d', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
         {
           name: '规格下限',
           type: 'line',
           markLine: {
-            data: [{ yAxis: lsl, label: { formatter: 'LSL', position: 'end' } }],
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ yAxis: lsl }],
             lineStyle: { color: '#f5222d', type: 'dashed', width: 2 },
-            symbol: 'none',
+            label: { formatter: `LSL=${lsl.toFixed(4)}`, color: '#f5222d', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
         {
           name: '均值',
           type: 'line',
           markLine: {
-            data: [{ yAxis: metrics?.mean || 0, label: { formatter: 'μ', position: 'end' } }],
-            lineStyle: { color: '#52c41a', type: 'solid', width: 2 },
-            symbol: 'none',
+            silent: true,
+            symbol: ['none', 'none'],
+            data: [{ yAxis: metrics?.mean || 0 }],
+            lineStyle: { color: '#00bcd4', type: 'solid', width: 2 },
+            label: { formatter: `μ=${(metrics?.mean || 0).toFixed(4)}`, color: '#00868a', fontSize: currentFontSize.axis, position: 'end' },
           },
         },
       ],
@@ -548,15 +623,24 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
 
   return (
     <>
-      <div style={{ background: '#fff' }}>
-        <div style={{ padding: '12px 24px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 4 }}>
+        {/* 工具栏 */}
+        <div style={{
+          padding: '10px 20px',
+          borderBottom: '1px solid #f0f0f0',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          background: '#fafafa',
+        }}>
           <Space>
-            <FontSizeOutlined />
-            <span>字体大小：</span>
+            <FontSizeOutlined style={{ color: '#888' }} />
+            <span style={{ color: '#666', fontSize: 13 }}>字体：</span>
             <Select
               value={fontSize}
               onChange={setFontSize}
-              style={{ width: 100 }}
+              size="small"
+              style={{ width: 80 }}
               options={[
                 { label: '小', value: 'small' },
                 { label: '中', value: 'medium' },
@@ -565,101 +649,117 @@ const ChartsPanel: React.FC<ChartsPanelProps> = ({
             />
           </Space>
         </div>
-        <Tabs defaultActiveKey="1" size="large">
-          <TabPane tab={chartType === 'xbar-r' ? '均值图' : '单值图'} key="1">
-            <div style={{ position: 'relative', padding: '24px 0 0 0' }}>
+
+        <Tabs defaultActiveKey="1" size="large" style={{ padding: '0 4px' }}>
+          {/* 均值/单值图 */}
+          <TabPane tab={chartType === 'xbar-r' ? '均值图 (X-bar)' : '单值图 (I)'} key="1">
+            <div style={{ position: 'relative', paddingTop: 12 }}>
               <Button
                 icon={<FullscreenOutlined />}
+                size="small"
                 onClick={() => setFullscreenChart('xbar')}
-                style={{ position: 'absolute', right: 10, top: 10, zIndex: 10 }}
+                style={{ position: 'absolute', right: 12, top: 12, zIndex: 10 }}
               >
-                放大查看
+                放大
               </Button>
-              <ReactECharts option={xBarChartOption} style={{ height: '600px' }} />
+              <ReactECharts option={xBarChartOption} style={{ height: 520 }} />
             </div>
+            <AnomalyPanel anomalies={anomalies} total={xBarData.length} updateTime={updateTime} />
           </TabPane>
-          <TabPane tab={chartType === 'xbar-r' ? '极差图' : '移动极差图'} key="2">
-            <div style={{ position: 'relative', padding: '24px 0 0 0' }}>
+
+          {/* 极差/移动极差图 */}
+          <TabPane tab={chartType === 'xbar-r' ? '极差图 (R)' : '移动极差图 (MR)'} key="2">
+            <div style={{ position: 'relative', paddingTop: 12 }}>
               <Button
                 icon={<FullscreenOutlined />}
+                size="small"
                 onClick={() => setFullscreenChart('r')}
-                style={{ position: 'absolute', right: 10, top: 10, zIndex: 10 }}
+                style={{ position: 'absolute', right: 12, top: 12, zIndex: 10 }}
               >
-                放大查看
+                放大
               </Button>
-              <ReactECharts option={rChartOption} style={{ height: '600px' }} />
+              <ReactECharts option={rChartOption} style={{ height: 520 }} />
             </div>
+            <AnomalyPanel anomalies={[]} total={rData.length} updateTime={updateTime} />
           </TabPane>
+
+          {/* 直方图 */}
           <TabPane tab="过程能力分析" key="3">
-            <div style={{ position: 'relative', padding: '24px 0 0 0' }}>
+            <div style={{ position: 'relative', paddingTop: 12 }}>
               <Button
                 icon={<FullscreenOutlined />}
+                size="small"
                 onClick={() => setFullscreenChart('histogram')}
-                style={{ position: 'absolute', right: 10, top: 10, zIndex: 10 }}
+                style={{ position: 'absolute', right: 12, top: 12, zIndex: 10 }}
               >
-                放大查看
+                放大
               </Button>
-              <ReactECharts option={histogramOption} style={{ height: '600px' }} />
+              <ReactECharts option={histogramOption} style={{ height: 520 }} />
             </div>
           </TabPane>
+
+          {/* 散点图 */}
           <TabPane tab="散点图" key="4">
-            <div style={{ position: 'relative', padding: '24px 0 0 0' }}>
+            <div style={{ position: 'relative', paddingTop: 12 }}>
               <Button
                 icon={<FullscreenOutlined />}
+                size="small"
                 onClick={() => setFullscreenChart('scatter')}
-                style={{ position: 'absolute', right: 10, top: 10, zIndex: 10 }}
+                style={{ position: 'absolute', right: 12, top: 12, zIndex: 10 }}
               >
-                放大查看
+                放大
               </Button>
-              <ReactECharts option={scatterChartOption} style={{ height: '600px' }} />
+              <ReactECharts option={scatterChartOption} style={{ height: 520 }} />
             </div>
           </TabPane>
         </Tabs>
       </div>
 
-      {/* Fullscreen Modal for X-bar Chart */}
+      {/* 全屏 Modal - 均值/单值图 */}
       <Modal
         title={chartType === 'xbar-r' ? '均值控制图 (X-bar)' : '单值控制图 (I)'}
         open={fullscreenChart === 'xbar'}
         onCancel={() => setFullscreenChart(null)}
         footer={null}
-        width="90%"
+        width="92%"
         style={{ top: 20 }}
       >
         <ReactECharts option={xBarChartOption} style={{ height: '70vh' }} />
+        <AnomalyPanel anomalies={anomalies} total={xBarData.length} updateTime={updateTime} />
       </Modal>
 
-      {/* Fullscreen Modal for R Chart */}
+      {/* 全屏 Modal - 极差/移动极差图 */}
       <Modal
         title={chartType === 'xbar-r' ? '极差控制图 (R)' : '移动极差控制图 (MR)'}
         open={fullscreenChart === 'r'}
         onCancel={() => setFullscreenChart(null)}
         footer={null}
-        width="90%"
+        width="92%"
         style={{ top: 20 }}
       >
         <ReactECharts option={rChartOption} style={{ height: '70vh' }} />
+        <AnomalyPanel anomalies={[]} total={rData.length} updateTime={updateTime} />
       </Modal>
 
-      {/* Fullscreen Modal for Histogram */}
+      {/* 全屏 Modal - 直方图 */}
       <Modal
         title="过程能力分布直方图"
         open={fullscreenChart === 'histogram'}
         onCancel={() => setFullscreenChart(null)}
         footer={null}
-        width="90%"
+        width="92%"
         style={{ top: 20 }}
       >
         <ReactECharts option={histogramOption} style={{ height: '70vh' }} />
       </Modal>
 
-      {/* Fullscreen Modal for Scatter Chart */}
+      {/* 全屏 Modal - 散点图 */}
       <Modal
-        title="散点图分析"
+        title="数据散点图（含趋势线）"
         open={fullscreenChart === 'scatter'}
         onCancel={() => setFullscreenChart(null)}
         footer={null}
-        width="90%"
+        width="92%"
         style={{ top: 20 }}
       >
         <ReactECharts option={scatterChartOption} style={{ height: '70vh' }} />
