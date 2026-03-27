@@ -5,6 +5,9 @@ import SideNavigation from './components/SideNavigation';
 import HorizontalParameterPanel from './components/ParameterPanel/HorizontalPanel';
 import ConfigOverview from './components/ConfigOverview';
 import AlarmRulesManager from './components/AlarmRulesManager';
+import UsageGuide from './components/UsageGuide';
+import MSAOverview from './components/MSAOverview';
+import GaugeRR from './components/GaugeRR';
 import ChartCard from './components/ChartCard';
 import SPCRecommendation from './components/SPCRecommendation';
 import DataImportDrawer from './components/DataImportDrawer';
@@ -30,6 +33,8 @@ type ViewMode =
   | 'realtime'       // 实时监控
   | 'alarm'          // 报警管理
   | 'alarm-rules'    // 报警规则管理
+  | 'msa'            // MSA 测量系统分析概览
+  | 'grr'            // GR&R 量具分析
   | 'cpk'            // CPK 计算
   | 'normality'      // 正态性检验
   | 'trend'          // 趋势分析
@@ -80,6 +85,9 @@ function App() {
       'config-1': 'config',
       'config-2': 'config',
       'config-3': 'alarm-rules',
+      'msa': 'msa',
+      'msa-1': 'msa',
+      'msa-2': 'grr',
     };
     return mapping[key] || 'dashboard';
   };
@@ -359,14 +367,18 @@ function App() {
 
   // 渲染主内容区域
   const renderMainContent = () => {
-    // 报警规则管理无需数据，优先处理
+    // 以下页面无需数据，优先处理
     if (viewMode === 'alarm-rules') {
-      return (
-        <AlarmRulesManager
-          parameters={parameters}
-          onParametersChange={setParameters}
-        />
-      );
+      return <AlarmRulesManager parameters={parameters} onParametersChange={setParameters} />;
+    }
+    if (viewMode === 'msa') {
+      return <MSAOverview />;
+    }
+    if (viewMode === 'grr') {
+      return <GaugeRR />;
+    }
+    if (viewMode === 'summary' && (!rawData || rawData.length === 0)) {
+      return <UsageGuide />;
     }
 
     // 如果没有数据，显示欢迎页面
@@ -594,6 +606,9 @@ function App() {
           rData={chartData.rData}
           onApplySuggestedLimits={handleApplySuggestedLimits}
         />
+      </Col>
+      <Col span={24}>
+        <UsageGuide />
       </Col>
     </Row>
   );
